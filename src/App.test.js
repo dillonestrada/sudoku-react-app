@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { mount } from "enzyme";
 import {
     nextEmptySpot,
     solve,
@@ -32,12 +33,12 @@ test("user can enter a correct value into grid", () => {
     // Get correct grid values
     const solvedGrid = solve(grid);
     const emptySpotCorrectValue =
-        solvedGrid[emptySpotIndices[0]][emptySpotIndices[1]].toString();
+        solvedGrid[emptySpotIndices[0]][emptySpotIndices[1]];
 
     // Enter a correct value
-    userEvent.type(emptySpot, emptySpotCorrectValue);
+    emptySpot.value = emptySpotCorrectValue;
 
-    expect(emptySpot).toHaveValue(emptySpotCorrectValue);
+    expect(emptySpot).toHaveValue(emptySpotCorrectValue.toString());
 });
 
 test("user can not enter a letter into a square", () => {
@@ -208,35 +209,32 @@ test("clicking 'New Game' button generates a new sudoku board", () => {
     );
 });
 
-// test("finishing board correctly alerts 'Completed!'", () => {
-//     render(<App />);
+test("finishing board correctly alerts 'Completed!'", () => {
+    const wrapper = mount(<App />);
 
-//     // Get values from DOM input elements and put them into 2D array
-//     const gridInputs = screen.getAllByRole("textbox");
-//     const grid = getSudokuGrid(gridInputs);
+    // Get values from DOM input elements and put them into 2D array
+    const gridInputs = wrapper.find(".inputBox");
+    let gridInputsElements = [];
+    gridInputs.forEach((input) => {
+        gridInputsElements.push(input.getDOMNode());
+    });
+    const grid = getSudokuGrid(gridInputsElements);
 
-//     // Get correct grid values
-//     const solvedGrid = solve(grid);
+    // Get correct grid values
+    const solvedGrid = solve(grid);
 
-//     let counter = 0;
+    let counter = 0;
 
-//     const gameBoard = document.querySelector(".gameBoard");
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (gridInputs.at(counter).getDOMNode().value != solvedGrid[i][j]) {
+                gridInputs.at(counter).simulate("change", {
+                    target: { value: solvedGrid[i][j] },
+                });
+            }
+            counter++;
+        }
+    }
 
-//     for (let i = 0; i < 9; i++) {
-//         for (let j = 0; j < 9; j++) {
-//             if (gridInputs[counter].value != solvedGrid[i][j]) {
-//                 userEvent.type(gridInputs[counter], solvedGrid[i][j]);
-//             }
-
-//             // gridInputs[counter].value == solvedGrid[i][j]
-//             //     ? ""
-//             //     : (gridInputs[counter].value = parseInt(solvedGrid[i][j]));
-//             counter++;
-//         }
-//     }
-
-//     const afterGridInputs = screen.getAllByRole("textbox");
-//     const afterGrid = getSudokuGrid(afterGridInputs);
-
-//     expect(window.alert).toBeCalledWith("Completed!");
-// });
+    expect(window.alert).toBeCalledWith("Completed!");
+});
